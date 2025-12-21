@@ -1,0 +1,10 @@
+name: crypto_platform
+version: '1.0'
+config-version: 2
+
+profile: crypto_platform_profile
+
+model-paths: ["models"]
+target-path: "target"
+clean-targets:
+  - "target"

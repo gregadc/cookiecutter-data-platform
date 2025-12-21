@@ -1,0 +1,36 @@
+[package]
+name = "data-platform"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Web framework
+actix-web = "4.4"
+tokio = { version = "1.35", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+futures = "0.3"
+actix-cors = "0.7"
+reqwest = { version = "0.11", features = ["json"] }
+
+# Database
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "chrono", "rust_decimal"] }
+rust_decimal = "1.33"
+chrono = { version = "0.4", features = ["serde"] }
+
+# Observabilité
+opentelemetry = "0.20"
+opentelemetry-prometheus = "0.13"
+opentelemetry_sdk = { version = "0.20", features = ["rt-tokio"] }
+prometheus = "0.13"
+lazy_static = "1.4"
+actix-web-prometheus = "0.1"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-opentelemetry = "0.21"
+tracing-actix-web = "0.7"
+
+# Utils
+rand = "0.8"

@@ -1,0 +1,7 @@
+databases:
+  - database_name: crypto_platform
+    sqlalchemy_uri: postgresql+psycopg2://admin:admin@data-platform-postgres:5432/admin
+    expose_in_sqllab: true
+    allow_ctas: true
+    allow_cvas: true
+    allow_dml: true

@@ -1,0 +1,41 @@
+version: 2
+
+models:
+  - name: raw_ohlc
+    description: "Table RAW des données OHLC des cryptos"
+    columns:
+      - name: id
+        description: "Primary key auto-increment"
+        tests:
+          - unique
+          - not_null
+      - name: symbol
+        description: "Symbol de la crypto (ex: BTCUSDT)"
+        tests:
+          - not_null
+      - name: timestamp
+        description: "Timestamp de la bougie"
+        tests:
+          - not_null
+      - name: open
+        description: "Prix d'ouverture"
+        tests:
+          - not_null
+      - name: high
+        description: "Prix haut"
+        tests:
+          - not_null
+      - name: low
+        description: "Prix bas"
+        tests:
+          - not_null
+      - name: close
+        description: "Prix de clôture"
+        tests:
+          - not_null
+      - name: volume
+        description: "Volume échangé"
+        tests:
+          - not_null
+      - name: ingested_at
+        description: "Timestamp ingestion, default NOW()"

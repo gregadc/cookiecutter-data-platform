@@ -1,0 +1,1 @@
+RUST_LOG=info,sqlx=debug DATABASE_URL="postgresql://admin:admin@localhost:5434/admin" cargo run

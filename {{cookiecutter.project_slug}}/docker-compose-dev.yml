@@ -1,0 +1,499 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: data-platform-postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: admin
+    ports:
+      - "5434:5432" 
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - data-platform
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d admin"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: data-platform-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - data-platform
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  airflow-init:
+    image: apache/airflow:2.7.3-python3.11
+    container_name: airflow-init
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow/airflow
+      AIRFLOW__CORE__FERNET_KEY: ''
+      # Set after with cookicutter conf
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true' # Dags paused
+      # AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'false'
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      _AIRFLOW_DB_MIGRATE: 'true'
+      _AIRFLOW_WWW_USER_CREATE: 'true'
+      _AIRFLOW_WWW_USER_USERNAME: admin
+      _AIRFLOW_WWW_USER_PASSWORD: admin
+    depends_on:
+      postgres-airflow:
+        condition: service_healthy
+    networks:
+      - data-platform
+    entrypoint: /bin/bash
+    command: >
+      -c "
+      airflow db migrate &&
+      airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com || true &&
+      echo 'Airflow DB initialized successfully'
+      "
+    # command: version
+
+  postgres-airflow:
+    image: postgres:15
+    container_name: postgres-airflow
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_airflow_data:/var/lib/postgresql/data
+    networks:
+      - data-platform
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow -d airflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  airflow-webserver:
+    image: apache/airflow:2.7.3-python3.11
+    container_name: airflow-webserver
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow/airflow
+      AIRFLOW__CORE__FERNET_KEY: ''
+      # Set after with cookicutter conf
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true' # Dags paused
+      # AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'false'
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__METRICS__STATSD_ON: 'True'
+      AIRFLOW__METRICS__STATSD_HOST: '0.0.0.0'
+      AIRFLOW__METRICS__STATSD_PORT: '9125'
+      AIRFLOW__METRICS__STATSD_PREFIX: 'airflow'
+      AIRFLOW__METRICS__STATSD_EXPORTER: 'prometheus'
+      AIRFLOW__METRICS__STATSD_ALLOW_LIST: '*'
+      AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
+      # AIRFLOW__API__ENABLE_CORS: 'True'
+      # AIRFLOW__API__ACCESS_CONTROL_ALLOW_ORIGINS: '*'
+      PROJECT_ROOT: /Users/gregamorim/Documents/baby-bot/cookiecutter-data-platform/{{cookiecutter.project_slug}}
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./ingestion:/opt/airflow/ingestion
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data:/opt/airflow/data
+    ports:
+      - "8081:8080"
+    depends_on:
+      postgres-airflow:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
+    networks:
+      - data-platform
+    command: webserver
+    restart: on-failure
+
+  airflow-scheduler:
+    image: apache/airflow:2.7.3-python3.11
+    container_name: airflow-scheduler
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow/airflow
+      AIRFLOW__CORE__FERNET_KEY: ''
+
+      # Set after with cookicutter conf
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true' # Dags paused
+      # AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'false'
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__METRICS__STATSD_ON: 'True'
+      AIRFLOW__METRICS__STATSD_HOST: '0.0.0.0'
+      AIRFLOW__METRICS__STATSD_PORT: '9125'
+      AIRFLOW__METRICS__STATSD_PREFIX: 'airflow'
+      AIRFLOW__METRICS__STATSD_EXPORTER: 'prometheus'
+      AIRFLOW__METRICS__STATSD_ALLOW_LIST: '*'
+      AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
+      PROJECT_ROOT: /Users/gregamorim/Documents/baby-bot/cookiecutter-data-platform/{{cookiecutter.project_slug}}
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./ingestion:/opt/airflow/ingestion
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data:/opt/airflow/data
+    depends_on:
+      postgres-airflow:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
+    networks:
+      - data-platform
+    command: scheduler
+    restart: on-failure
+  
+  crypto-producer:
+    profiles: ["realtime"]
+    # H24 producer
+    build:
+      context: ./ingestion/rust-ingestion
+      dockerfile: Dockerfile
+    image: crypto-ingestion:latest
+    container_name: crypto-producer
+    environment:
+      DATASOURCE__SOURCE_TYPE: binance
+      DATASOURCE__USE_REALTIME: "true"
+      STORAGE__ENABLED: "false"
+      KAFKA__ENABLED: "true"
+      KAFKA__BROKERS: kafka:9093
+      KAFKA__TOPIC: crypto-prices
+      PROVIDER__API_KEY: ""
+      PROVIDER__API_SECRET: ""
+      PROVIDER__ENABLED: "true"
+      PROVIDER__URL: "https://api.binance.com/api/v3/klines"
+    depends_on:
+      # kafka:
+      #  condition: service_healthy
+      - kafka  # Delete "condition: service_healthy"
+    restart: unless-stopped
+    networks:
+      - data-platform
+
+  crypto-ingestion:
+    build:
+      context: ./ingestion/rust-ingestion
+      dockerfile: Dockerfile
+    image: crypto-ingestion:latest
+    container_name: crypto-ingestion
+    environment:
+      DATASOURCE__SOURCE_TYPE: local_csv
+      DATASOURCE__CSV_PATH: /data/
+      STORAGE__ENABLED: "true"
+      STORAGE__URI: redis://data-platform-redis:6379
+      STORAGE__CHANNEL: channel
+      PROVIDER__API_KEY: ""
+      PROVIDER__API_SECRET: ""
+      PROVIDER__ENABLED: "false"
+    volumes:
+      - ./data:/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - data-platform
+    restart: on-failure
+  
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - data-platform
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=redis-datasource
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_USERS_DEFAULT_THEME=dark
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/dashboards/api-dashboard.json
+      - GF_FEATURE_TOGGLES_ENABLE=publicDashboards
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/etc/grafana/dashboards
+    depends_on:
+      - prometheus
+    networks:
+      - data-platform
+    restart: unless-stopped
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: postgres-exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://admin:admin@data-platform-postgres:5432/admin?sslmode=disable"
+    ports:
+      - "9187:9187"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - data-platform
+    restart: unless-stopped
+
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: redis-exporter
+    environment:
+      REDIS_ADDR: "data-platform-redis:6379"
+    ports:
+      - "9121:9121"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - data-platform
+    restart: unless-stopped
+  
+  dbt:
+    image: fishtownanalytics/dbt:1.0.0
+    container_name: dbt
+    volumes:
+      - ./dbt:/usr/app/dbt
+    working_dir: /usr/app/dbt
+    environment:
+      DBT_PROFILES_DIR: /usr/app/dbt
+    networks:
+      - data-platform
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["tail", "-f", "/dev/null"]
+    restart: on-failure
+
+  superset:
+    build: 
+      context: ./superset
+      dockerfile: Dockerfile
+    container_name: superset
+    ports:
+      - "8088:8088"
+    environment:
+      - SUPERSET_SECRET_KEY=your_secret_key_here
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - data-platform
+    restart: unless-stopped
+  
+  api:
+    build: ./api
+    container_name: crypto-api
+    ports:
+      - "8082:8082"
+    environment:
+      DATABASE_URL: postgresql://admin:admin@data-platform-postgres:5432/admin
+      AIRFLOW_URL: "http://airflow-webserver:8080/api/v1/dags/crypto_ingestion_pipeline/dagRuns"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - data-platform
+    restart: unless-stopped
+  
+  zookeeper:
+    profiles: ["realtime"]
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181 # Port where Kafka will connect
+      ZOOKEEPER_TICK_TIME: 2000 # Heartbeat (all 2s)
+    ports:
+      - "2181:2181" # Expose port for Kafka
+    networks:
+      - data-platform
+    #  WITH real-time
+    healthcheck:
+      #test: ["CMD", "bash", "-c", "echo ruok | timeout 5 nc localhost 2181 | grep -q imok"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/commands/ruok"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+  
+  kafka:
+    profiles: ["realtime"]
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    #  WITH real-time
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9092:9092" # Port for clients (producer/consumer)
+      - "9093:9093" # Port interne (between containers)
+    environment:
+      KAFKA_BROKER_ID: 1 # unique ID of this broker
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181 # Adress for Zookeeper
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9093,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1 # No replication (only one broker)
+    networks:
+      - data-platform
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9093"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+  
+  kafka-init:
+    profiles: ["realtime"]
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - data-platform
+    command: >
+      bash -c "
+      echo 'Waiting for Kafka to be ready...'
+      cub kafka-ready -b kafka:9093 1 30
+      
+      kafka-topics --create --if-not-exists 
+      --topic crypto-prices 
+      --bootstrap-server kafka:9093 
+      --partitions 1 
+      --replication-factor 1
+      
+      echo 'Topic crypto-prices created!'
+      "
+  
+  kafka-connect:
+    profiles: ["realtime"]
+    image: confluentinc/cp-kafka-connect:7.5.0
+    container_name: kafka-connect
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8083:8083"
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: kafka:9093
+      CONNECT_REST_PORT: 8083
+      CONNECT_GROUP_ID: "connect-cluster"
+      CONNECT_CONFIG_STORAGE_TOPIC: "connect-configs"
+      CONNECT_OFFSET_STORAGE_TOPIC: "connect-offsets"
+      CONNECT_STATUS_STORAGE_TOPIC: "connect-status"
+      CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_REST_ADVERTISED_HOST_NAME: "kafka-connect"
+      CONNECT_PLUGIN_PATH: "/usr/share/java,/usr/share/confluent-hub-components"
+      KAFKA_HEAP_OPTS: "-Xms512M -Xmx1G"
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: "1"
+    networks:
+      - data-platform
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    command:
+      - bash
+      - -c
+      - |
+        confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:latest
+        /etc/confluent/docker/run
+  
+  dbt-realtime:
+    profiles: ["realtime"]
+    image: fishtownanalytics/dbt:1.0.0
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./dbt:/usr/app/dbt
+    working_dir: /usr/app/dbt
+    environment:
+      DBT_PROFILES_DIR: /usr/app/dbt
+    networks:
+      - data-platform
+    command: ["run", "--select", "raw_ohlc"]
+
+  kafka-connect-init:
+    profiles: ["realtime"]
+    image: curlimages/curl
+    depends_on:
+      kafka-connect:
+        condition: service_healthy
+      dbt-realtime:
+        condition: service_completed_successfully
+    volumes:
+      - ./kafka-connect:/config
+    networks:
+      - data-platform
+    command: sh /config/init.sh
+
+  #kafka-connect-init:
+  #  image: curlimages/curl:latest
+  #  container_name: kafka-connect-init
+  #  depends_on:
+  #    kafka-connect:
+  #      condition: service_healthy
+  #  volumes:
+  #    - ./kafka-connect/config:/config
+  #  networks:
+  #    - data-platform
+  #  command: >
+  #    sh -c "
+  #    echo 'Waiting for Kafka Connect to be ready...'
+  #    sleep 60
+  #    curl -X POST http://kafka-connect:8083/connectors 
+  #    -H 'Content-Type: application/json' 
+  #    -d @/config/postgres-sink.json
+  #    echo 'Connector created!'
+  #    "
+  #  restart: on-failure
+
+volumes:
+  postgres_data:
+  postgres_airflow_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  data-platform:
+    driver: bridge

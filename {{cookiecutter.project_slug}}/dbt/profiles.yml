@@ -1,0 +1,12 @@
+crypto_platform_profile:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: data-platform-postgres
+      user: admin
+      password: admin
+      port: 5432
+      dbname: admin
+      schema: public
+      threads: 1

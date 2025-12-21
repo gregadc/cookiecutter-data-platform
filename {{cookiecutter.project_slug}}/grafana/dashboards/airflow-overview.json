@@ -1,0 +1,118 @@
+{
+  "id": null,
+  "uid": "airflow-overview",
+  "title": "Airflow Overview",
+  "tags": ["airflow", "prometheus"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Scheduler Heartbeat",
+      "datasource": {"type": "prometheus", "uid": "Prometheus"},
+      "targets": [
+        {
+          "expr": "airflow_scheduler_heartbeat{job='airflow'}",
+          "legendFormat": "Scheduler Heartbeat",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [
+            {"color": "red", "value": 0},
+            {"color": "green", "value": 1}
+          ]}
+        }
+      },
+      "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4}
+    },
+    {
+      "type": "stat",
+      "title": "Active DAG Runs",
+      "datasource": {"type": "prometheus", "uid": "Prometheus"},
+      "targets": [
+        {
+          "expr": "sum(airflow_dag_run_duration{job='airflow'})",
+          "legendFormat": "Active DAGs",
+          "refId": "B"
+        }
+      ],
+      "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4}
+    },
+    {
+      "type": "graph",
+      "title": "DAG Run Duration (seconds)",
+      "datasource": {"type": "prometheus", "uid": "Prometheus"},
+      "targets": [
+        {
+          "expr": "avg(airflow_dag_run_duration{job='airflow'}) by (dag_id)",
+          "legendFormat": "{{dag_id}}",
+          "refId": "C"
+        }
+      ],
+      "gridPos": {"x": 0, "y": 4, "w": 12, "h": 8}
+    },
+    {
+      "type": "graph",
+      "title": "Task Success vs Failed (Count)",
+      "datasource": {"type": "prometheus", "uid": "Prometheus"},
+      "targets": [
+        {
+          "expr": "sum(rate(airflow_task_instance_successes{job='airflow'}[5m]))",
+          "legendFormat": "Success",
+          "refId": "D"
+        },
+        {
+          "expr": "sum(rate(airflow_task_instance_failures{job='airflow'}[5m]))",
+          "legendFormat": "Failures",
+          "refId": "E"
+        }
+      ],
+      "gridPos": {"x": 0, "y": 12, "w": 12, "h": 8}
+    },
+    {
+      "type": "graph",
+      "title": "Queued Tasks",
+      "datasource": {"type": "prometheus", "uid": "Prometheus"},
+      "targets": [
+        {
+          "expr": "sum(airflow_scheduler_queued_tasks{job='airflow'})",
+          "legendFormat": "Queued Tasks",
+          "refId": "F"
+        }
+      ],
+      "gridPos": {"x": 0, "y": 20, "w": 12, "h": 6}
+    }
+  ],
+  "time": {"from": "now-6h", "to": "now"},
+  "templating": {
+    "list": [
+      {
+        "type": "query",
+        "name": "dag_id",
+        "datasource": {"type": "prometheus", "uid": "Prometheus"},
+        "refresh": 2,
+        "query": "label_values(airflow_dag_run_duration, dag_id)",
+        "includeAll": true,
+        "multi": true,
+        "sort": 1
+      }
+    ]
+  },
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "type": "dashboard",
+        "name": "Annotations & Alerts",
+        "enable": true,
+        "hide": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+{
+    "data_source": ["local_csv", "s3_csv", "binance_api"],
+    "csv_path": "data/orders.csv",
+    "s3_bucket": "my-bucket",
+    "binance_enabled": ["true", "false"],
+    "project_name": "cookiecutter-data-plarform",
+    "full_name": "admin",
+    "email": "admin@gmail.com",
+    "password": "admin",
+    "debug": [0, 1],
+    "_copy_without_render": [
+        "{{cookiecutter.project_name}}/app/templates/*.html",
+        "*.html"
+    ]
+}

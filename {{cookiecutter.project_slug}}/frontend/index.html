@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Data Platform</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+
+        .stat-trend {
+            font-size: 0.75em;
+            opacity: 0.8;
+            margin-top: 8px;
+        }
+
+        .live-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #48bb78;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7); }
+            50% { opacity: 0.7; box-shadow: 0 0 0 5px rgba(72, 187, 120, 0); }
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #48bb78;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+        }
+        
+        .btn-trigger {
+            background: #f56565;
+            color: white;
+        }
+        
+        .btn-trigger:hover {
+            background: #e53e3e;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 101, 101, 0.4);
+        }
+        
+        .btn-info {
+            background: #4299e1;
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.4);
+        }
+        
+        .btn-purple {
+            background: #9f7aea;
+            color: white;
+        }
+        
+        .btn-purple:hover {
+            background: #805ad5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(159, 122, 234, 0.4);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        h2 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .badge {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.7em;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        tbody tr:hover {
+            background: #f7fafc;
+        }
+        
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+        
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .success {
+            background: #c6f6d5;
+            color: #22543d;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: #a0aec0;
+        }
+        
+        .price {
+            font-weight: 600;
+            color: #48bb78;
+        }
+        
+        .symbol {
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .timestamp {
+            color: #718096;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function App() {
+            const [rawCount, setRawCount] = useState(0);
+            const [stagingData, setStagingData] = useState(null);
+            const [dailyData, setDailyData] = useState(null);
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState(null);
+            const [success, setSuccess] = useState(null);
+            const [triggerLoading, setTriggerLoading] = useState(false);
+            const [lastUpdate, setLastUpdate] = useState(new Date());
+
+            const API_BASE = 'http://0.0.0.0:8082/api';
+
+            const fetchRawCount = async () => {
+                try {
+                    const response = await fetch(`${API_BASE}/raw/count`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        setRawCount(data.count || 0);
+                        setLastUpdate(new Date());
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch raw count:', err);
+                }
+            };
+
+            const fetchData = async (endpoint, setter) => {
+                try {
+                    const response = await fetch(`${API_BASE}/${endpoint}`);
+                    if (!response.ok) throw new Error(``);
+                    const data = await response.json();
+                    setter(data);
+                } catch (err) {
+                    setError(`No data ON ${endpoint}: ${err.message}`);
+                }
+            };
+
+            const loadData = async () => {
+                setLoading(true);
+                setError(null);
+                try {
+                    await Promise.all([
+                        fetchRawCount(),
+                        fetchData('staging', setStagingData),
+                        fetchData('daily', setDailyData)
+                    ]);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const triggerAirflow = async () => {
+                setTriggerLoading(true);
+                setError(null);
+                setSuccess(null);
+                
+                try {
+                    const response = await fetch(`${API_BASE}/trigger`, {
+                        method: 'POST'
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Failed to trigger pipeline');
+                    }
+
+                    setSuccess('✅ Pipeline triggered successfully!');
+                    setTimeout(() => setSuccess(null), 5000);
+                } catch (err) {
+                    setError(`❌ Failed to trigger pipeline: ${err.message}`);
+                } finally {
+                    setTriggerLoading(false);
+                }
+            };
+
+            useEffect(() => {
+                fetchRawCount();
+                const interval = setInterval(fetchRawCount, 1000);
+                return () => clearInterval(interval);
+            }, []);
+
+            useEffect(() => {
+                loadData();
+            }, []);
+
+            const renderTable = (data, title) => {
+                if (!data) return null;
+
+                return (
+                    <div className="section">
+                        <h2>
+                            {title}
+                            <span className="badge">{data.count} records</span>
+                        </h2>
+                        {data.data && data.data.length > 0 ? (
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Symbol</th>
+                                        <th>Open</th>
+                                        <th>High</th>
+                                        <th>Low</th>
+                                        <th>Close</th>
+                                        <th>Volume</th>
+                                        <th>Timestamp</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {data.data.map((item, idx) => (
+                                        <tr key={idx}>
+                                            <td className="symbol">{item.symbol}</td>
+                                            <td className="price">${parseFloat(item.open).toFixed(2)}</td>
+                                            <td className="price">${parseFloat(item.high).toFixed(2)}</td>
+                                            <td className="price">${parseFloat(item.low).toFixed(2)}</td>
+                                            <td className="price">${parseFloat(item.close).toFixed(2)}</td>
+                                            <td>{parseFloat(item.volume).toFixed(2)}</td>
+                                            <td className="timestamp">{new Date(item.timestamp).toLocaleString()}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        ) : (
+                            <div className="empty">No data available</div>
+                        )}
+                    </div>
+                );
+            };
+
+            return (
+                <div className="container">
+                    <h1>🚀 Crypto Data Platform</h1>
+                    <p className="subtitle">Real-time cryptocurrency data monitoring</p>
+
+                    <div className="stats-container">
+                        <div className="stat-card">
+                            <div className="stat-label">
+                                📊 Raw Records 
+                                <span className="live-indicator"></span>
+                            </div>
+                            <div className="stat-value">
+                                {rawCount.toLocaleString()}
+                            </div>
+                            <div className="stat-trend">
+                                Updated: {lastUpdate.toLocaleTimeString()}
+                            </div>
+                        </div>
+                        
+                        <div className="stat-card">
+                            <div className="stat-label">📦 Staging Records</div>
+                            <div className="stat-value">
+                                {stagingData?.count?.toLocaleString() || '0'}
+                            </div>
+                        </div>
+                        
+                        <div className="stat-card">
+                            <div className="stat-label">📅 Daily Records</div>
+                            <div className="stat-value">
+                                {dailyData?.count?.toLocaleString() || '0'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="controls">
+                        <button 
+                            className="btn-primary" 
+                            onClick={loadData}
+                            disabled={loading}
+                        >
+                            {loading ? '🔄 Loading...' : '🔄 Refresh Data'}
+                        </button>
+                        <button 
+                            className="btn-trigger" 
+                            onClick={triggerAirflow}
+                            disabled={triggerLoading}
+                        >
+                            {triggerLoading ? '⚡ Triggering...' : '⚡ Trigger Pipeline'}
+                        </button>
+                        <button 
+                            className="btn-secondary" 
+                            onClick={() => window.open('http://localhost:8081', '_blank')}
+                        >
+                            📊 Airflow
+                        </button>
+                        <button 
+                            className="btn-info" 
+                            onClick={() => window.open('http://localhost:3000', '_blank')}
+                        >
+                            📈 Grafana
+                        </button>
+                        <button 
+                            className="btn-purple" 
+                            onClick={() => window.open('http://localhost:8088', '_blank')}
+                        >
+                            📊 Superset
+                        </button>
+                    </div>
+
+                    {error && <div className="error">{error}</div>}
+                    {success && <div className="success">{success}</div>}
+
+                    {loading && <div className="loading">Loading data...</div>}
+
+                    {!loading && (
+                        <>
+                            {renderTable(dailyData, '📅 Daily Data')}
+                            {renderTable(stagingData, '📦 Staging Data')}
+                        </>
+                    )}
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
