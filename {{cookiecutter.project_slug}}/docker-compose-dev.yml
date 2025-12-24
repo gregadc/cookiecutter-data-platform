@@ -420,6 +420,7 @@ services:
       CONNECT_REST_ADVERTISED_HOST_NAME: "kafka-connect"
       CONNECT_PLUGIN_PATH: "/usr/share/java,/usr/share/confluent-hub-components"
       KAFKA_HEAP_OPTS: "-Xms512M -Xmx1G"
+      # KAFKA_HEAP_OPTS: "-Xms1G -Xmx2G"  # ← Change to 512M-1G à 1G-2G
       CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: "1"
       CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: "1"
       CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: "1"
@@ -430,7 +431,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 30s
+      start_period: 120s
     command:
       - bash
       - -c
@@ -466,27 +467,6 @@ services:
     networks:
       - data-platform
     command: sh /config/init.sh
-
-  #kafka-connect-init:
-  #  image: curlimages/curl:latest
-  #  container_name: kafka-connect-init
-  #  depends_on:
-  #    kafka-connect:
-  #      condition: service_healthy
-  #  volumes:
-  #    - ./kafka-connect/config:/config
-  #  networks:
-  #    - data-platform
-  #  command: >
-  #    sh -c "
-  #    echo 'Waiting for Kafka Connect to be ready...'
-  #    sleep 60
-  #    curl -X POST http://kafka-connect:8083/connectors 
-  #    -H 'Content-Type: application/json' 
-  #    -d @/config/postgres-sink.json
-  #    echo 'Connector created!'
-  #    "
-  #  restart: on-failure
 
 volumes:
   postgres_data:

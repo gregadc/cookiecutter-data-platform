@@ -427,3 +427,69 @@ docker exec -it data-platform-postgres psql -U admin -d admin -c "SELECT COUNT(*
     │   Superset        │    │   Grafana         │
     │  Dashboards       │    │   Monitoring      │
     └───────────────────┘    └───────────────────┘
+
+
+
+### Checker les erreurs
+# 1. Vérifie que crypto-producer stream bien
+docker logs crypto-producer --tail 10
+
+# 2. Vérifie que Kafka reçoit les messages
+docker exec -it kafka kafka-console-consumer \
+  --bootstrap-server localhost:9093 \
+  --topic crypto-prices \
+  --max-messages 5
+
+# 3. Status du connector (IMPORTANT)
+curl http://localhost:8083/connectors/postgres-sink-crypto/status | jq
+
+# 4. Logs de kafka-connect (cherche les erreurs)
+docker logs kafka-connect --tail 50
+
+# 5. Compte en DB
+docker exec data-platform-postgres psql -U admin -d admin -c "SELECT COUNT(*) FROM raw_ohlc;"
+
+# 6. Vérifie les dernières lignes insérées (timestamp)
+docker exec data-platform-postgres psql -U admin -d admin -c "
+SELECT symbol, timestamp, close 
+FROM raw_ohlc 
+ORDER BY timestamp DESC 
+LIMIT 10;
+"
+
+# 7. Vérifie le consumer group offset (est-ce qu'il avance ?)
+docker exec kafka kafka-consumer-groups \
+  --bootstrap-server localhost:9093 \
+  --describe \
+  --group connect-postgres-sink-crypto
+
+docker compose -f {{cookiecutter.project_slug}}/docker-compose-dev.yml --profile realtime restart kafka-connect
+
+
+
+RAG
+┌─────────────────────────────────────────────────┐
+│           Ton projet actuel                     │
+│  Kafka → Postgres → dbt → Superset              │
+└─────────────────┬───────────────────────────────┘
+                  │
+                  ↓
+         ┌────────────────────┐
+         │  Vector Database   │
+         │  (ChromaDB/Qdrant) │
+         └────────┬───────────┘
+                  │
+         ┌────────▼───────────┐
+         │   Embeddings       │
+         │  (OpenAI/HuggingFace)
+         └────────┬───────────┘
+                  │
+         ┌────────▼───────────┐
+         │    RAG Engine      │
+         │  (LangChain/Llama) │
+         └────────┬───────────┘
+                  │
+         ┌────────▼───────────┐
+         │   Chat Interface   │
+         │    (Streamlit)     │
+         └────────────────────┘
