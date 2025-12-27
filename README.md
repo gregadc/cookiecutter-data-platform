@@ -467,7 +467,7 @@ docker compose -f {{cookiecutter.project_slug}}/docker-compose-dev.yml --profile
 
 
 
-RAG
+RAG ? ou n8S ?
 ┌─────────────────────────────────────────────────┐
 │           Ton projet actuel                     │
 │  Kafka → Postgres → dbt → Superset              │
