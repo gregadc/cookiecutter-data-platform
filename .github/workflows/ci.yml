@@ -10,7 +10,7 @@ env:
 
 jobs:
   lint-python:
-    name: 🐍 Lint Python
+    name: 🐍 Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,17 +25,21 @@ jobs:
         run: pip install ruff
 
       - name: Run ruff check
-        run: ruff check dags/
+        run: ruff check '{{cookiecutter.project_slug}}/dags/'
 
       - name: Run ruff format check
-        run: ruff format --check dags/
+        run: ruff format --check '{{cookiecutter.project_slug}}/dags/'
 
   lint-rust:
-    name: 🦀 Lint Rust
+    name: 🦀 Lint - ${{ matrix.name }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        project: ["api", "ingestion/rust-ingestion"]
+        include:
+          - project: "api"
+            name: "API"
+          - project: "ingestion/rust-ingestion"
+            name: "Ingestion"
     steps:
       - uses: actions/checkout@v4
 
@@ -52,22 +56,21 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            ${{ matrix.project }}/target/
-          key: ${{ runner.os }}-cargo-${{ matrix.project }}-${{ hashFiles(format('{0}/Cargo.lock', matrix.project)) }}
+            {{cookiecutter.project_slug}}/${{ matrix.project }}/target/
+          key: ${{ runner.os }}-cargo-${{ matrix.project }}-${{ hashFiles(format('{{cookiecutter.project_slug}}/{0}/Cargo.lock', matrix.project)) }}
           restore-keys: |
             ${{ runner.os }}-cargo-${{ matrix.project }}-
 
       - name: Run cargo fmt
-        working-directory: ${{ matrix.project }}
+        working-directory: '{{cookiecutter.project_slug}}/${{ matrix.project }}'
         run: cargo fmt --all -- --check
 
       - name: Run cargo clippy
-        working-directory: ${{ matrix.project }}
-        # run: cargo clippy --all-targets --all-features -- -D warnings
-        run: cargo clippy --all-targets --all-features -- -W clippy::all
+        working-directory: '{{cookiecutter.project_slug}}/${{ matrix.project }}'
+        run: cargo clippy --all-targets --all-features
 
   test-python:
-    name: 🧪 Test Python
+    name: 🐍 Tests
     runs-on: ubuntu-latest
     needs: lint-python
     steps:
@@ -86,19 +89,23 @@ jobs:
 
       - name: Run pytest
         run: |
-          if [ -d "tests" ] || ls dags/test_*.py 2>/dev/null; then
-            pytest dags/ --cov=dags --cov-report=xml --cov-report=term
+          if [ -d "{{cookiecutter.project_slug}}/tests" ] || ls {{cookiecutter.project_slug}}/dags/test_*.py 2>/dev/null; then
+            pytest {{cookiecutter.project_slug}}/dags/ --cov={{cookiecutter.project_slug}}/dags --cov-report=xml --cov-report=term
           else
             echo "No tests found, skipping..."
           fi
 
   test-rust:
-    name: 🧪 Test Rust
+    name: 🦀 tests - ${{ matrix.name }}
     runs-on: ubuntu-latest
     needs: lint-rust
     strategy:
       matrix:
-        project: ["api", "ingestion/rust-ingestion"]
+        include:
+          - project: "api"
+            name: "API"
+          - project: "ingestion/rust-ingestion"
+            name: "Ingestion"
     steps:
       - uses: actions/checkout@v4
 
@@ -113,13 +120,13 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            ${{ matrix.project }}/target/
-          key: ${{ runner.os }}-cargo-${{ matrix.project }}-${{ hashFiles(format('{0}/Cargo.lock', matrix.project)) }}
+            {{cookiecutter.project_slug}}/${{ matrix.project }}/target/
+          key: ${{ runner.os }}-cargo-${{ matrix.project }}-${{ hashFiles(format('{{cookiecutter.project_slug}}/{0}/Cargo.lock', matrix.project)) }}
           restore-keys: |
             ${{ runner.os }}-cargo-${{ matrix.project }}-
 
       - name: Run cargo test
-        working-directory: ${{ matrix.project }}
+        working-directory: '{{cookiecutter.project_slug}}/${{ matrix.project }}'
         run: cargo test --all-features --verbose
 
   summary:
