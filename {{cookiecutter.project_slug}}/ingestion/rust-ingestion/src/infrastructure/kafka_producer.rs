@@ -1,7 +1,7 @@
 use rdkafka::config::ClientConfig;
 use rdkafka::producer::{FutureProducer, FutureRecord};
-use std::time::Duration;
 use std::error::Error;
+use std::time::Duration;
 
 pub struct KafkaProducer {
     producer: FutureProducer,
@@ -22,9 +22,7 @@ impl KafkaProducer {
     }
 
     pub async fn send(&self, key: &str, payload: &str) -> Result<(), Box<dyn Error>> {
-        let record = FutureRecord::to(&self.topic)
-            .payload(payload)
-            .key(key);
+        let record = FutureRecord::to(&self.topic).payload(payload).key(key);
 
         self.producer
             .send(record, Duration::from_secs(0))

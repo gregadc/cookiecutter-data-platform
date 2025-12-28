@@ -8,13 +8,12 @@ use reqwest::Client;
 use serde::Deserialize;
 use serde_json;
 
-use tokio_tungstenite::connect_async;
 use futures_util::StreamExt;
-use url::Url;
 use serde_json::Value;
+use tokio_tungstenite::connect_async;
+use url::Url;
 
 use crate::infrastructure::kafka_producer::KafkaProducer;
-
 
 #[derive(Debug)]
 pub struct BinanceProvider {
@@ -49,7 +48,10 @@ impl DataProvider for VoidProvider {
         }])
     }
 
-    async fn fetch_real_time_data(&self, kafka: Option<Arc<KafkaProducer>>) -> Result<Vec<MarketData>, ProviderError> {
+    async fn fetch_real_time_data(
+        &self,
+        kafka: Option<Arc<KafkaProducer>>,
+    ) -> Result<Vec<MarketData>, ProviderError> {
         Ok(vec![MarketData {
             timestamp: Utc::now(),
             open: 0.0,
@@ -170,20 +172,24 @@ impl DataProvider for BinanceProvider {
         Ok(market_data)
     }
 
-    async fn fetch_real_time_data(&self, kafka: Option<Arc<KafkaProducer>>) -> Result<Vec<MarketData>, ProviderError> {
+    async fn fetch_real_time_data(
+        &self,
+        kafka: Option<Arc<KafkaProducer>>,
+    ) -> Result<Vec<MarketData>, ProviderError> {
         let pairs = vec!["btcusdt", "dotusdt", "ethusdt", "adausdt", "xrpusdt"];
-        let streams: Vec<String> = pairs.iter()
-            .map(|p| format!("{}@kline_1m", p))
-            .collect();
+        let streams: Vec<String> = pairs.iter().map(|p| format!("{}@kline_1m", p)).collect();
 
-        let stream_url = format!("wss://stream.binance.com:9443/stream?streams={}", streams.join("/"));
-        let url = Url::parse(&stream_url)
-            .map_err(|e| ProviderError::RequestError(e.to_string()))?;
-        
+        let stream_url = format!(
+            "wss://stream.binance.com:9443/stream?streams={}",
+            streams.join("/")
+        );
+        let url =
+            Url::parse(&stream_url).map_err(|e| ProviderError::RequestError(e.to_string()))?;
+
         let (ws_stream, _) = connect_async(url)
             .await
             .map_err(|e| ProviderError::RequestError(e.to_string()))?;
-        
+
         let (_, mut read) = ws_stream.split();
 
         while let Some(msg) = read.next().await {
@@ -191,16 +197,17 @@ impl DataProvider for BinanceProvider {
             sleep(Duration::from_secs(5)).await; // temporary
 
             let msg = msg.map_err(|e| ProviderError::DataError(e.to_string()))?;
-            
+
             if msg.is_text() {
-                let text = msg.to_text()
+                let text = msg
+                    .to_text()
                     .map_err(|e| ProviderError::DataError(e.to_string()))?;
-                
+
                 let v: Value = serde_json::from_str(text)
                     .map_err(|e| ProviderError::DataError(e.to_string()))?;
-                
+
                 let data = &v["data"]["k"];
-                
+
                 let symbol = data["s"].as_str().unwrap_or("UNKNOWN");
                 let open = data["o"].as_str().unwrap_or("0").parse().unwrap_or(0.0);
                 let high = data["h"].as_str().unwrap_or("0").parse().unwrap_or(0.0);
@@ -208,10 +215,9 @@ impl DataProvider for BinanceProvider {
                 let close = data["c"].as_str().unwrap_or("0").parse().unwrap_or(0.0);
                 let volume = data["v"].as_str().unwrap_or("0").parse().unwrap_or(0.0);
                 let timestamp_ms = data["t"].as_i64().unwrap_or(0);
-                
-                
-                let timestamp = DateTime::from_timestamp(timestamp_ms / 1000, 0)
-                    .unwrap_or_else(|| Utc::now());
+
+                let timestamp =
+                    DateTime::from_timestamp(timestamp_ms / 1000, 0).unwrap_or_else(|| Utc::now());
 
                 let payload = serde_json::json!({
                     "schema": {
@@ -237,13 +243,17 @@ impl DataProvider for BinanceProvider {
                     }
                 });
 
-                println!("📊 {} -> open: {}, high: {}, low: {}, close: {}, volume: {}", 
-                        symbol, open, high, low, close, volume);
-                
+                println!(
+                    "📊 {} -> open: {}, high: {}, low: {}, close: {}, volume: {}",
+                    symbol, open, high, low, close, volume
+                );
+
                 if let Some(ref kafka_producer) = kafka {
                     let json_payload = serde_json::to_string(&payload)
                         .map_err(|e| ProviderError::DataError(e.to_string()))?;
-                    kafka_producer.send(symbol, &json_payload).await
+                    kafka_producer
+                        .send(symbol, &json_payload)
+                        .await
                         .map_err(|e| ProviderError::DataError(e.to_string()))?;
                 }
             }

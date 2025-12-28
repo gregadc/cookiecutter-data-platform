@@ -22,10 +22,10 @@ fn default_use_realtime() -> bool {
 pub struct DataSourceConfig {
     #[serde(default = "default_source_type")]
     pub source_type: String, // "local_csv", "s3_csv", or "binance"
-    
+
     #[serde(default = "default_csv_path")]
     pub csv_path: String,
-    
+
     #[serde(default = "default_s3_uri")]
     pub s3_uri: String,
 
@@ -48,10 +48,8 @@ pub fn get_datasource_config(prefix: &str) -> Result<DataSourceConfig, ConfigErr
     let source = Environment::with_prefix(prefix)
         .try_parsing(true)
         .prefix_separator("__");
-    
-    let config = Config::builder()
-        .add_source(source)
-        .build()?;
-    
+
+    let config = Config::builder().add_source(source).build()?;
+
     config.try_deserialize()
 }

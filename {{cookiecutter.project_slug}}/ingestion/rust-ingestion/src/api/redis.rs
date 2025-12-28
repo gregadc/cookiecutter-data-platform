@@ -1,9 +1,7 @@
 use crate::application::RedisConfig;
 use deadpool_redis::{
     redis::{cmd, AsyncCommands},
-    Config, 
-    Pool, 
-    Runtime
+    Config, Pool, Runtime,
 };
 use std::error::Error;
 use std::fmt;
@@ -81,11 +79,11 @@ impl RedisManager {
         batch: &[(String, String)],
     ) -> Result<(), Box<dyn Error>> {
         let mut pipe = deadpool_redis::redis::pipe();
-        
+
         for (key, value) in batch {
             pipe.cmd("SET").arg(key).arg(value);
         }
-        
+
         // pipe.query_async(conn).await?;
         pipe.query_async::<()>(conn).await?;
         Ok(())
@@ -98,17 +96,21 @@ impl RedisManager {
         record: &OhlcRecord,
     ) -> Result<(), Box<dyn Error>> {
         let key = format!("{}-{}", symbol, record.timestamp);
-        
+
         //conn.hset_multiple(&key, &[
-        conn.hset_multiple::<_, _, _, ()>(&key, &[
-            ("open", record.open.to_string()),
-            ("high", record.high.to_string()),
-            ("low", record.low.to_string()),
-            ("close", record.close.to_string()),
-            ("volume", record.volume.to_string()),
-            ("timestamp", record.timestamp.clone()),
-        ]).await?;
-        
+        conn.hset_multiple::<_, _, _, ()>(
+            &key,
+            &[
+                ("open", record.open.to_string()),
+                ("high", record.high.to_string()),
+                ("low", record.low.to_string()),
+                ("close", record.close.to_string()),
+                ("volume", record.volume.to_string()),
+                ("timestamp", record.timestamp.clone()),
+            ],
+        )
+        .await?;
+
         Ok(())
     }
 
@@ -119,19 +121,22 @@ impl RedisManager {
         records: &[OhlcRecord],
     ) -> Result<(), Box<dyn Error>> {
         let mut pipe = deadpool_redis::redis::pipe();
-        
+
         for record in records {
             let key = format!("{}-{}", symbol, record.timestamp);
-            pipe.hset_multiple(&key, &[
-                ("open", record.open.to_string()),
-                ("high", record.high.to_string()),
-                ("low", record.low.to_string()),
-                ("close", record.close.to_string()),
-                ("volume", record.volume.to_string()),
-                ("timestamp", record.timestamp.clone()),
-            ]);
+            pipe.hset_multiple(
+                &key,
+                &[
+                    ("open", record.open.to_string()),
+                    ("high", record.high.to_string()),
+                    ("low", record.low.to_string()),
+                    ("close", record.close.to_string()),
+                    ("volume", record.volume.to_string()),
+                    ("timestamp", record.timestamp.clone()),
+                ],
+            );
         }
-        
+
         // pipe.query_async(conn).await?;
         pipe.query_async::<()>(conn).await?;
         Ok(())
@@ -143,7 +148,7 @@ impl RedisManager {
         key: &str,
     ) -> Result<OhlcRecord, Box<dyn Error>> {
         let data: Vec<(String, String)> = conn.hgetall(key).await?;
-        
+
         let mut record = OhlcRecord {
             timestamp: String::new(),
             open: 0.0,
@@ -152,7 +157,7 @@ impl RedisManager {
             close: 0.0,
             volume: 0.0,
         };
-        
+
         for (field, value) in data {
             match field.as_str() {
                 "open" => record.open = value.parse()?,
@@ -164,7 +169,7 @@ impl RedisManager {
                 _ => {}
             }
         }
-        
+
         Ok(record)
     }
 }

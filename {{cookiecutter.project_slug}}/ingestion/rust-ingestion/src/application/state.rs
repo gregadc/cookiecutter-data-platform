@@ -25,19 +25,19 @@ pub struct State {
 pub async fn get_state(config: &Config) -> Result<State, StateError> {
     let kafka = if config.kafka.enabled {
         match KafkaProducer::new(&config.kafka.brokers, &config.kafka.topic) {
-            Ok(producer) => Some(Arc::new(producer)),  // ← Changé
+            Ok(producer) => Some(Arc::new(producer)), // ← Changé
             Err(e) => return Err(StateError::Kafka(e.to_string())),
         }
     } else {
         None
     };
-    
+
     /*let data = &config.provider {
         BinanceProvider::new(conf_provider.clone()).boxed()
     } else {
         BinanceProvider::new().boxed()
     };*/
-    
+
     let provider: Box<dyn DataProvider> = if config.provider.enabled {
         Box::new(BinanceProvider::new(config.provider.clone()))
     } else {

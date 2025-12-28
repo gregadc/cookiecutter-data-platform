@@ -95,7 +95,7 @@ pub struct ProviderConfig {
     pub coin: String,
 
     #[serde(default = "default_real_time")]
-    pub real_time: bool
+    pub real_time: bool,
 }
 
 impl Default for ProviderConfig {

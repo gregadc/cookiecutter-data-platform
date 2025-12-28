@@ -1,6 +1,6 @@
-use std::sync::Arc;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use thiserror::Error;
 
 use crate::infrastructure::kafka_producer::KafkaProducer;
@@ -78,5 +78,8 @@ pub trait DataProvider {
 
     fn get_supported_symbols(&self) -> Vec<String>;
     async fn get_information_account(&self) -> Result<AccountInformation, ProviderError>;
-    async fn fetch_real_time_data(&self, kafka: Option<Arc<KafkaProducer>>) -> Result<Vec<MarketData>, ProviderError>;
+    async fn fetch_real_time_data(
+        &self,
+        kafka: Option<Arc<KafkaProducer>>,
+    ) -> Result<Vec<MarketData>, ProviderError>;
 }
