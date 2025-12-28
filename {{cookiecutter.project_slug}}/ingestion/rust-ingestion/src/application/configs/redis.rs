@@ -1,10 +1,8 @@
-use std::time::Duration;
 
 use config::Config;
 use config::ConfigError;
 use config::Environment;
 use serde::Deserialize;
-use serde::Deserializer;
 
 fn default_enabled() -> bool {
     true
@@ -44,13 +42,7 @@ pub fn get_redis_config(prefix: &str) -> Result<RedisConfig, ConfigError> {
     let source = Environment::with_prefix(prefix)
         .try_parsing(true)
         .prefix_separator("__");
-    let config = match Config::builder().add_source(source).build() {
-        Err(error) => return Err(error),
-        Ok(value) => value,
-    };
-    let config: RedisConfig = match config.try_deserialize() {
-        Err(error) => return Err(error),
-        Ok(value) => value,
-    };
+    let config = Config::builder().add_source(source).build()?;
+    let config: RedisConfig = config.try_deserialize()?;
     Ok(config)
 }

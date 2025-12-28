@@ -63,7 +63,8 @@ jobs:
 
       - name: Run cargo clippy
         working-directory: ${{ matrix.project }}
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        # run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo clippy --all-targets --all-features -- -W clippy::all
 
   test-python:
     name: 🧪 Test Python

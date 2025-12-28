@@ -1,14 +1,12 @@
-from datetime import datetime, timedelta
 import os
+from datetime import datetime, timedelta
 
+import psycopg2
+import redis
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.providers.docker.operators.docker import DockerOperator
-
-import redis
-import psycopg2
 from psycopg2.extras import execute_batch
-
 
 REDIS_HOST = os.getenv("REDIS_HOST", "data-platform-redis")
 REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))

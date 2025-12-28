@@ -59,13 +59,7 @@ pub fn get_kafka_config(prefix: &str) -> Result<KafkaConfig, ConfigError> {
     let source = Environment::with_prefix(prefix)
         .try_parsing(true)
         .prefix_separator("__");
-    let config = match Config::builder().add_source(source).build() {
-        Err(error) => return Err(error),
-        Ok(value) => value,
-    };
-    let config: KafkaConfig = match config.try_deserialize() {
-        Err(error) => return Err(error),
-        Ok(value) => value,
-    };
+    let config = Config::builder().add_source(source).build()?;
+    let config: KafkaConfig = config.try_deserialize()?;
     Ok(config)
 }

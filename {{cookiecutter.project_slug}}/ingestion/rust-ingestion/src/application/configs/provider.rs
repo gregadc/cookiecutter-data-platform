@@ -52,7 +52,7 @@ where
     D: serde::Deserializer<'de>,
 {
     let date_str = String::deserialize(deserializer)?;
-    if !date_str.chars().all(|c| c.is_digit(10) || c == '-') {
+    if !date_str.chars().all(|c| c.is_ascii_digit() || c == '-') {
         return Err(serde::de::Error::custom(format!(
             "Invalid date: '{}'. Expected format YYYY-MM-DD",
             date_str

@@ -5,8 +5,6 @@ use crate::api::provider::DataProvider;
 use crate::api::redis::RedisManager;
 use crate::application::Config;
 use crate::infrastructure::kafka_producer::KafkaProducer;
-use config::ConfigError;
-use deadpool_redis::Pool;
 use thiserror::Error;
 
 #[derive(Debug, Error)]

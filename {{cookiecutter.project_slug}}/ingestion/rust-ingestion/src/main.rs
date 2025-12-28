@@ -116,7 +116,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                                 batches_by_symbol
                                     .entry(item.symbol.clone())
-                                    .or_insert_with(Vec::new)
+                                    .or_default()
                                     .push(record);
                             }
 

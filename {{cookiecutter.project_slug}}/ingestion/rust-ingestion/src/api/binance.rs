@@ -3,9 +3,8 @@ use std::sync::Arc;
 use crate::api::provider::{AccountInformation, DataProvider, Interval, MarketData, ProviderError};
 use crate::application::ProviderConfig;
 use async_trait::async_trait;
-use chrono::{DateTime, Duration, Utc};
+use chrono::{DateTime, Utc};
 use reqwest::Client;
-use serde::Deserialize;
 use serde_json;
 
 use futures_util::StreamExt;
@@ -176,7 +175,7 @@ impl DataProvider for BinanceProvider {
         &self,
         kafka: Option<Arc<KafkaProducer>>,
     ) -> Result<Vec<MarketData>, ProviderError> {
-        let pairs = vec!["btcusdt", "dotusdt", "ethusdt", "adausdt", "xrpusdt"];
+        let pairs = ["btcusdt", "dotusdt", "ethusdt", "adausdt", "xrpusdt"];
         let streams: Vec<String> = pairs.iter().map(|p| format!("{}@kline_1m", p)).collect();
 
         let stream_url = format!(
@@ -217,7 +216,7 @@ impl DataProvider for BinanceProvider {
                 let timestamp_ms = data["t"].as_i64().unwrap_or(0);
 
                 let timestamp =
-                    DateTime::from_timestamp(timestamp_ms / 1000, 0).unwrap_or_else(|| Utc::now());
+                    DateTime::from_timestamp(timestamp_ms / 1000, 0).unwrap_or_else(Utc::now);
 
                 let payload = serde_json::json!({
                     "schema": {
