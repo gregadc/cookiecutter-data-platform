@@ -1,0 +1,4 @@
+**/target/**
+**/fixtures/**
+**/node_modules/**
+**/.venv/**

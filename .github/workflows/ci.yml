@@ -1,4 +1,4 @@
-name: CI - Lint & Test
+name: ""
 
 on:
   pull_request:
@@ -96,7 +96,7 @@ jobs:
           fi
 
   test-rust:
-    name: 🦀 tests - ${{ matrix.name }}
+    name: 🦀 Tests - ${{ matrix.name }}
     runs-on: ubuntu-latest
     needs: lint-rust
     strategy:
