@@ -46,7 +46,7 @@ pub fn read_csv_local(path: &str) -> Result<Vec<MarketDataWithSymbol>, Box<dyn E
         let entry = entry?;
         let file_path = entry.path();
 
-        if !file_path.is_file() || !file_path.extension().map_or(false, |ext| ext == "csv") {
+        if !file_path.is_file() || file_path.extension().is_none_or(|ext| ext != "csv") {
             continue;
         }
 

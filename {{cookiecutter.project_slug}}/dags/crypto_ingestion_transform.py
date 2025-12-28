@@ -1,5 +1,5 @@
-from datetime import datetime, timedelta
 import os
+from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.providers.docker.operators.docker import DockerOperator
@@ -38,5 +38,3 @@ with DAG(
         mounts=[{"source": f"{PROJECT_ROOT}/dbt", "target": "/usr/app/dbt", "type": "bind"}],
         mount_tmp_dir=False,
     )
-
-    run_dbt_incremental

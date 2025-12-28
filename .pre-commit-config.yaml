@@ -1,5 +1,36 @@
+# Pre-commit hooks configuration
+# Run: pre-commit install
+# Update: pre-commit autoupdate
+
 repos:
-  - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.18.0
+  # Generic file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
     hooks:
-      - id: gitleaks
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: [--unsafe]
+      - id: check-json
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      - id: check-merge-conflict
+      - id: mixed-line-ending
+
+  # Python - Ruff (linting + formatting)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+        files: ^{{cookiecutter\.project_slug}}/dags/.*\.py$
+      - id: ruff-format
+        files: ^{{cookiecutter\.project_slug}}/dags/.*\.py$
+
+  # Rust - Formatting
+  - repo: https://github.com/doublify/pre-commit-rust
+    rev: v1.0
+    hooks:
+      - id: fmt
+        name: cargo fmt (api)

@@ -1,7 +1,7 @@
 use crate::application::RedisConfig;
 use deadpool_redis::{
     redis::{cmd, AsyncCommands},
-    Config, Pool, Runtime,
+    Config, Pool,
 };
 use std::error::Error;
 use std::fmt;
