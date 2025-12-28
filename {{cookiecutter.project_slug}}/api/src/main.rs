@@ -1,6 +1,6 @@
+use actix_cors::Cors;
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use actix_web_prometheus::PrometheusMetricsBuilder;
-use actix_cors::Cors;
 use serde::{Deserialize, Serialize};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use tracing::info;
@@ -10,8 +10,8 @@ use rust_decimal::Decimal;
 
 mod metrics_middleware;
 
-use prometheus::{Encoder, Registry, TextEncoder};
 use metrics_middleware::MetricsMiddleware;
+use prometheus::{Encoder, Registry, TextEncoder};
 
 #[derive(Deserialize)]
 struct Pagination {
@@ -66,10 +66,7 @@ async fn get_raw_count(pool: web::Data<PgPool>) -> impl Responder {
 }
 
 #[actix_web::get("/api/staging")]
-async fn get_staging(
-    pool: web::Data<PgPool>,
-    query: web::Query<Pagination>,
-) -> impl Responder {
+async fn get_staging(pool: web::Data<PgPool>, query: web::Query<Pagination>) -> impl Responder {
     let page = query.page.unwrap_or(1);
     let limit = query.limit.unwrap_or(50).min(100);
     let offset = (page - 1) * limit;
@@ -101,10 +98,7 @@ async fn get_staging(
 }
 
 #[actix_web::get("/api/daily")]
-async fn get_daily(
-    pool: web::Data<PgPool>,
-    query: web::Query<Pagination>,
-) -> impl Responder {
+async fn get_daily(pool: web::Data<PgPool>, query: web::Query<Pagination>) -> impl Responder {
     let page = query.page.unwrap_or(1);
     let limit = query.limit.unwrap_or(50).min(100);
     let offset = (page - 1) * limit;
@@ -136,19 +130,19 @@ async fn get_daily(
 #[actix_web::post("/api/trigger")]
 async fn trigger_pipeline() -> impl Responder {
     info!("Triggering Airflow pipeline");
-    
+
     let client = reqwest::Client::new();
     let airflow_url = std::env::var("AIRFLOW_URL")
         .unwrap_or_else(|_| "http://airflow-webserver:8081".to_string());
     // let airflow_url = "http://localhost:8081/api/v1/dags/crypto_ingestion_pipeline/dagRuns";
-    
+
     let response = client
         .post(airflow_url)
         .basic_auth("admin", Some("admin"))
         .json(&serde_json::json!({"conf": {}}))
         .send()
         .await;
-    
+
     match response {
         Ok(resp) => {
             if resp.status().is_success() {
@@ -159,13 +153,16 @@ async fn trigger_pipeline() -> impl Responder {
                 }))
             } else {
                 let status = resp.status();
-                let error_body = resp.text().await.unwrap_or_else(|_| "Unknown error".to_string());
+                let error_body = resp
+                    .text()
+                    .await
+                    .unwrap_or_else(|_| "Unknown error".to_string());
                 info!("Failed to trigger pipeline: {} - {}", status, error_body);
                 HttpResponse::InternalServerError().json(serde_json::json!({
                     "error": format!("Airflow error: {} - {}", status, error_body)
                 }))
             }
-        },
+        }
         Err(e) => {
             info!("Failed to connect to Airflow: {}", e);
             HttpResponse::InternalServerError().json(serde_json::json!({
@@ -205,21 +202,24 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(pool.clone()))
             .wrap(cors)
             .wrap(metrics.clone())
-            .route("/metrics", web::get().to({
-                let registry = registry.clone();
-                move || {
+            .route(
+                "/metrics",
+                web::get().to({
                     let registry = registry.clone();
-                    async move {
-                        let encoder = TextEncoder::new();
-                        let mf = registry.gather();
-                        let mut buffer = vec![];
-                        encoder.encode(&mf, &mut buffer).unwrap();
-                        HttpResponse::Ok()
-                            .content_type("text/plain; charset=utf-8")
-                            .body(buffer)
+                    move || {
+                        let registry = registry.clone();
+                        async move {
+                            let encoder = TextEncoder::new();
+                            let mf = registry.gather();
+                            let mut buffer = vec![];
+                            encoder.encode(&mf, &mut buffer).unwrap();
+                            HttpResponse::Ok()
+                                .content_type("text/plain; charset=utf-8")
+                                .body(buffer)
+                        }
                     }
-                }
-            }))
+                }),
+            )
             .service(hello)
             .service(get_raw_count)
             .service(get_staging)

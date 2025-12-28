@@ -24,10 +24,7 @@ impl MetricsMiddleware {
         .unwrap();
 
         let response_codes = CounterVec::new(
-            Opts::new(
-                "crypto_api_response_code",
-                "HTTP response codes of the API",
-            ),
+            Opts::new("crypto_api_response_code", "HTTP response codes of the API"),
             &["status"],
         )
         .unwrap();
@@ -37,13 +34,13 @@ impl MetricsMiddleware {
                 "crypto_api_response_time_seconds",
                 "Response time per request",
             )
-            .buckets(vec![
-                0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5,
-            ]),
+            .buckets(vec![0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5]),
         )
         .unwrap();
 
-        registry.register(Box::new(incoming_requests.clone())).unwrap();
+        registry
+            .register(Box::new(incoming_requests.clone()))
+            .unwrap();
         registry.register(Box::new(response_codes.clone())).unwrap();
         registry.register(Box::new(response_time.clone())).unwrap();
 
@@ -62,8 +59,7 @@ impl MetricsMiddleware {
 
 impl<S, B> Transform<S, ServiceRequest> for MetricsMiddleware
 where
-    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = actix_web::Error>
-        + 'static,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = actix_web::Error> + 'static,
     S::Future: 'static,
     B: 'static,
 {
@@ -92,20 +88,15 @@ pub struct MetricsMiddlewareService<S> {
 
 impl<S, B> Service<ServiceRequest> for MetricsMiddlewareService<S>
 where
-    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = actix_web::Error>
-        + 'static,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = actix_web::Error> + 'static,
     S::Future: 'static,
     B: 'static,
 {
     type Response = ServiceResponse<B>;
     type Error = actix_web::Error;
-    type Future =
-        Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
 
-    fn poll_ready(
-        &self,
-        ctx: &mut Context<'_>,
-    ) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready(&self, ctx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.service.poll_ready(ctx)
     }
 
