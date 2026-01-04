@@ -10,12 +10,6 @@ pub enum ProviderError {
     DataError(String),
 }
 
-/*#[derive(Error, Debug)]
-pub enum ProviderError {
-    RequestError(String),
-    DataError(String),
-    AuthenticationError(String),
-}*/
 #[derive(Debug, Deserialize)]
 pub struct Balance {
     pub asset: String,
@@ -65,4 +59,10 @@ pub trait DataProvider {
 
     fn get_supported_symbols(&self) -> Vec<String>;
     async fn get_information_account(&self) -> Result<AccountInformation, ProviderError>;
+}
+
+#[derive(Debug)]
+pub struct MarketDataWithSymbol {
+    pub symbol: String,
+    pub data: MarketData,
 }
