@@ -3,7 +3,25 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use thiserror::Error;
 
-use crate::infrastructure::kafka_producer::KafkaProducer;
+use crate::domain::event::EventProducer;
+
+#[derive(Debug, Clone, Copy, Deserialize)]
+pub enum Interval {
+    #[serde(rename = "1m")]
+    Minute1,
+
+    #[serde(rename = "5m")]
+    Minute5,
+
+    #[serde(rename = "1h")]
+    Hour1,
+
+    #[serde(rename = "1d")]
+    Day1,
+
+    #[serde(rename = "1M")]
+    Month1,
+}
 
 #[derive(Error, Debug)]
 pub enum ProviderError {
@@ -57,7 +75,7 @@ pub trait DataProvider {
     async fn get_information_account(&self) -> Result<AccountInformation, ProviderError>;
     async fn fetch_real_time_data(
         &self,
-        kafka: Option<Arc<KafkaProducer>>,
+        kafka: Option<Arc<dyn EventProducer>>,
     ) -> Result<Vec<MarketData>, ProviderError>;
 }
 

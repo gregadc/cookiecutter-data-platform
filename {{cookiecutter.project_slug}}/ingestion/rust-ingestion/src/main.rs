@@ -1,9 +1,8 @@
-use rust_ingestion::application::provider::Interval;
 use rust_ingestion::application::{get_config, get_state};
+use rust_ingestion::domain::provider::Interval;
 use rust_ingestion::infrastructure::readers::{read_csv_local, read_csv_s3};
 use rust_ingestion::infrastructure::storage::redis::OhlcRecord;
 
-use futures::StreamExt;
 use std::collections::HashMap;
 use std::time::Instant;
 

@@ -1,3 +1,5 @@
+use crate::domain::event::EventProducer;
+use async_trait::async_trait;
 use rdkafka::config::ClientConfig;
 use rdkafka::producer::{FutureProducer, FutureRecord};
 use std::error::Error;
@@ -20,8 +22,11 @@ impl KafkaProducer {
             topic: topic.to_string(),
         })
     }
+}
 
-    pub async fn send(&self, key: &str, payload: &str) -> Result<(), Box<dyn Error>> {
+#[async_trait]
+impl EventProducer for KafkaProducer {
+    async fn send(&self, key: &str, payload: &str) -> Result<(), Box<dyn Error>> {
         let record = FutureRecord::to(&self.topic).payload(payload).key(key);
 
         self.producer

@@ -1,12 +1,12 @@
 # 🚀 Cookiecutter Data Platform
 
-A production-ready data platform template for crypto market data ingestion, transformation, and visualization.
+A data platform model for data ingestion, transformation and visualization, in this project, it is cryptocurrency market prices.
 
 ## ✨ Features
 
 - **Dual-mode ingestion**: Batch (CSV) or Real-time (Kafka + Binance WebSocket)
 - **Medallion Architecture**: Bronze (raw) → Silver (cleaned) → Gold (aggregated)
-- **Modern Stack**: Rust + Python + Airflow + dbt + Kafka + PostgreSQL
+- **Technical Stack**: Rust + Python + Airflow + dbt + Kafka + PostgreSQL + Redis
 - **Observability**: Prometheus + Grafana monitoring
 - **Visualization**: Superset dashboards
 

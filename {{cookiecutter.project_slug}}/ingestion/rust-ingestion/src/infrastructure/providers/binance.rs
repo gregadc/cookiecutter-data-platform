@@ -1,8 +1,10 @@
 use std::sync::Arc;
 
-use crate::application::provider::Interval;
 use crate::application::ProviderConfig;
-use crate::domain::provider::{AccountInformation, DataProvider, MarketData, ProviderError};
+use crate::domain::event::EventProducer;
+use crate::domain::provider::{
+    AccountInformation, DataProvider, Interval, MarketData, ProviderError,
+};
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use reqwest::Client;
@@ -12,8 +14,6 @@ use futures_util::StreamExt;
 use serde_json::Value;
 use tokio_tungstenite::connect_async;
 use url::Url;
-
-use crate::infrastructure::kafka_producer::KafkaProducer;
 
 #[derive(Debug)]
 pub struct BinanceProvider {
@@ -30,7 +30,7 @@ pub struct BinanceProvider {
 pub struct VoidProvider {}
 
 impl VoidProvider {
-    pub fn new(config: &ProviderConfig) -> Self {
+    pub fn new(_config: &ProviderConfig) -> Self {
         Self {}
     }
 }
@@ -50,7 +50,7 @@ impl DataProvider for VoidProvider {
 
     async fn fetch_real_time_data(
         &self,
-        kafka: Option<Arc<KafkaProducer>>,
+        _kafka: Option<Arc<dyn EventProducer>>,
     ) -> Result<Vec<MarketData>, ProviderError> {
         Ok(vec![MarketData {
             timestamp: Utc::now(),
@@ -174,7 +174,7 @@ impl DataProvider for BinanceProvider {
 
     async fn fetch_real_time_data(
         &self,
-        kafka: Option<Arc<KafkaProducer>>,
+        kafka: Option<Arc<dyn EventProducer>>,
     ) -> Result<Vec<MarketData>, ProviderError> {
         let pairs = ["btcusdt", "dotusdt", "ethusdt", "adausdt", "xrpusdt"];
         let streams: Vec<String> = pairs.iter().map(|p| format!("{}@kline_1m", p)).collect();
