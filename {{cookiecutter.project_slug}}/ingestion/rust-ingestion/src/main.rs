@@ -1,7 +1,7 @@
-use rust_ingestion::api::provider::Interval;
-use rust_ingestion::api::redis::OhlcRecord;
-use rust_ingestion::application;
-use rust_ingestion::infrastructure::{read_csv_local, read_csv_s3};
+use rust_ingestion::application::provider::Interval;
+use rust_ingestion::application::{get_config, get_state};
+use rust_ingestion::infrastructure::readers::{read_csv_local, read_csv_s3};
+use rust_ingestion::infrastructure::storage::redis::OhlcRecord;
 
 use futures::StreamExt;
 use std::collections::HashMap;
@@ -23,12 +23,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let start_time = Instant::now();
     println!("🚀 Starting data collection process...");
 
-    let config = application::get_config().map_err(|error| {
+    let config = get_config().map_err(|error| {
         eprintln!("❌ Failed to load worker config: {}", error);
         error
     })?;
 
-    let state = application::get_state(&config).await.map_err(|error| {
+    let state = get_state(&config).await.map_err(|error| {
         eprintln!("❌ Failed to load worker state: {}", error);
         error
     })?;

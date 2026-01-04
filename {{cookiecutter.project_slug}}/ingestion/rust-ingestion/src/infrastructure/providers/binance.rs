@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
-use crate::api::provider::{AccountInformation, DataProvider, Interval, MarketData, ProviderError};
+use crate::application::provider::Interval;
 use crate::application::ProviderConfig;
+use crate::domain::provider::{AccountInformation, DataProvider, MarketData, ProviderError};
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use reqwest::Client;

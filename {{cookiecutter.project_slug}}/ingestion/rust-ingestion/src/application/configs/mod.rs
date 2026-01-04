@@ -1,6 +1,6 @@
 mod data_ingestion;
 mod kafka;
-mod provider;
+pub mod provider;
 mod redis;
 
 pub use data_ingestion::{get_datasource_config, DataSourceConfig};

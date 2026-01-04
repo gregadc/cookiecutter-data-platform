@@ -5,7 +5,23 @@ use config::Environment;
 use serde::Deserialize;
 use thiserror::Error;
 
-use crate::api::provider::Interval;
+#[derive(Debug, Clone, Copy, Deserialize)]
+pub enum Interval {
+    #[serde(rename = "1m")]
+    Minute1,
+
+    #[serde(rename = "5m")]
+    Minute5,
+
+    #[serde(rename = "1h")]
+    Hour1,
+
+    #[serde(rename = "1d")]
+    Day1,
+
+    #[serde(rename = "1M")]
+    Month1,
+}
 
 #[derive(Debug, Error)]
 pub enum DateValidationError {

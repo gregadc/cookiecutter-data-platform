@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
-use crate::api::binance::{BinanceProvider, VoidProvider};
-use crate::api::provider::DataProvider;
-use crate::api::redis::RedisManager;
 use crate::application::Config;
+use crate::domain::provider::DataProvider;
 use crate::infrastructure::kafka_producer::KafkaProducer;
+use crate::infrastructure::providers::binance::{BinanceProvider, VoidProvider};
+use crate::infrastructure::storage::redis::RedisManager;
 use thiserror::Error;
 
 #[derive(Debug, Error)]

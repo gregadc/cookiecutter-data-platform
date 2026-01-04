@@ -1,5 +1,5 @@
 use crate::domain::provider::MarketData;
-use crate::domain::models::MarketDataWithSymbol;
+use crate::domain::provider::MarketDataWithSymbol;
 use chrono::NaiveDateTime;
 use csv::Reader;
 use serde::Deserialize;
