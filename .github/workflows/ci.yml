@@ -84,13 +84,13 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pytest pytest-cov
+          pip install pytest pytest-cov apache-airflow apache-airflow-providers-docker redis psycopg2-binary
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Run pytest
         run: |
           if [ -d "{{cookiecutter.project_slug}}/tests" ] || ls {{cookiecutter.project_slug}}/dags/test_*.py 2>/dev/null; then
-            pytest {{cookiecutter.project_slug}}/dags/ --cov={{cookiecutter.project_slug}}/dags --cov-report=xml --cov-report=term
+            pytest {{cookiecutter.project_slug}}/tests/ {{cookiecutter.project_slug}}/dags/ --cov={{cookiecutter.project_slug}}/dags --cov-report=xml --cov-report=term
           else
             echo "No tests found, skipping..."
           fi
