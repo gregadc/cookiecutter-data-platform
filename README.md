@@ -156,9 +156,9 @@ See [COMMANDS.md](./COMMANDS.md) for detailed troubleshooting commands.
 - [x] Real-time ingestion (Kafka + WebSocket)
 - [x] dbt transformations (Silver/Gold layers)
 - [x] Monitoring (Prometheus/Grafana)
+- [x] CI/CD (GitHub Actions)
+- [x] Unit & Integration tests
 - [ ] Superset dashboards
-- [ ] CI/CD (GitHub Actions) - In Progress
-- [ ] Unit & Integration tests
 - [ ] Cloud deployment (Terraform)
 - [ ] RAG for chat-based analytics
 
