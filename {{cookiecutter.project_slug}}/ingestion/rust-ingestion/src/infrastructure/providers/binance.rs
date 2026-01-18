@@ -326,3 +326,104 @@ impl DataProvider for BinanceProvider {
             .map_err(|e| ProviderError::RequestError(e.to_string()))
     }*/
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_void_provider_fetch_historical_data() {
+        let config = ProviderConfig {
+            interval: Interval::Minute1,
+            ..Default::default()
+        };
+
+        let provider = VoidProvider::new(&config);
+        let result = provider.fetch_historical_data().await;
+
+        assert!(result.is_ok());
+        let data = result.unwrap();
+        assert_eq!(data.len(), 1);
+        assert_eq!(data[0].open, 0.0);
+        assert_eq!(data[0].close, 0.0);
+    }
+
+    #[tokio::test]
+    async fn test_void_provider_fetch_real_time_data() {
+        let config = ProviderConfig {
+            interval: Interval::Minute1,
+            ..Default::default()
+        };
+
+        let provider = VoidProvider::new(&config);
+        let result = provider.fetch_real_time_data(None).await;
+
+        assert!(result.is_ok());
+        let data = result.unwrap();
+        assert_eq!(data.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_void_provider_get_supported_symbols() {
+        let config = ProviderConfig {
+            interval: Interval::Minute1,
+            ..Default::default()
+        };
+
+        let provider = VoidProvider::new(&config);
+        let symbols = provider.get_supported_symbols();
+
+        assert_eq!(symbols.len(), 1);
+        assert_eq!(symbols[0], "");
+    }
+
+    #[tokio::test]
+    async fn test_void_provider_get_information_account() {
+        let config = ProviderConfig {
+            interval: Interval::Minute1,
+            ..Default::default()
+        };
+
+        let provider = VoidProvider::new(&config);
+        let result = provider.get_information_account().await;
+
+        assert!(result.is_ok());
+        let account = result.unwrap();
+        assert_eq!(account.maker_commission, 1);
+        assert_eq!(account.taker_commission, 1);
+        assert!(account.can_trade);
+        assert_eq!(account.balances.len(), 0);
+    }
+
+    #[test]
+    fn test_binance_provider_creation() {
+        let config = ProviderConfig {
+            api_key: "test_key".to_string(),
+            api_secret: "test_secret".to_string(),
+            url: "https://api.binance.com".to_string(),
+            coin: "BTCUSDT".to_string(),
+            interval: Interval::Minute1,
+            ..Default::default()
+        };
+
+        let provider = BinanceProvider::new(config);
+        assert_eq!(provider.api_key, "test_key");
+        assert_eq!(provider.api_secret, "test_secret");
+        assert_eq!(provider.coin, "BTCUSDT");
+    }
+
+    #[test]
+    fn test_binance_provider_get_supported_symbols() {
+        let config = ProviderConfig {
+            coin: "BTCUSDT".to_string(),
+            interval: Interval::Minute1,
+            ..Default::default()
+        };
+
+        let provider = BinanceProvider::new(config);
+        let symbols = provider.get_supported_symbols();
+
+        assert!(symbols.contains(&"BTCUSDT".to_string()));
+        assert!(symbols.contains(&"ETHUSDT".to_string()));
+    }
+}

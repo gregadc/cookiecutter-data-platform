@@ -84,3 +84,104 @@ pub struct MarketDataWithSymbol {
     pub symbol: String,
     pub data: MarketData,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::Utc;
+
+    #[test]
+    fn test_market_data_serialization() {
+        let market_data = MarketData {
+            timestamp: Utc::now(),
+            open: 45000.0,
+            high: 46000.0,
+            low: 44000.0,
+            close: 45500.0,
+            volume: 1250.5,
+        };
+
+        // Test serialization
+        let json = serde_json::to_string(&market_data).unwrap();
+        assert!(json.contains("open"));
+        assert!(json.contains("45000"));
+
+        // Test deserialization
+        let deserialized: MarketData = serde_json::from_str(&json).unwrap();
+        assert_eq!(deserialized.open, 45000.0);
+        assert_eq!(deserialized.high, 46000.0);
+        assert_eq!(deserialized.volume, 1250.5);
+    }
+
+    #[test]
+    fn test_interval_deserialization() {
+        let json_1m = r#""1m""#;
+        let interval: Interval = serde_json::from_str(json_1m).unwrap();
+        assert!(matches!(interval, Interval::Minute1));
+
+        let json_5m = r#""5m""#;
+        let interval: Interval = serde_json::from_str(json_5m).unwrap();
+        assert!(matches!(interval, Interval::Minute5));
+
+        let json_1h = r#""1h""#;
+        let interval: Interval = serde_json::from_str(json_1h).unwrap();
+        assert!(matches!(interval, Interval::Hour1));
+
+        let json_1d = r#""1d""#;
+        let interval: Interval = serde_json::from_str(json_1d).unwrap();
+        assert!(matches!(interval, Interval::Day1));
+
+        let json_1M = r#""1M""#;
+        let interval: Interval = serde_json::from_str(json_1M).unwrap();
+        assert!(matches!(interval, Interval::Month1));
+    }
+
+    #[test]
+    fn test_provider_error_display() {
+        let request_error = ProviderError::RequestError("Connection failed".to_string());
+        assert_eq!(
+            request_error.to_string(),
+            "API request failed: Connection failed"
+        );
+
+        let data_error = ProviderError::DataError("Invalid JSON".to_string());
+        assert_eq!(
+            data_error.to_string(),
+            "Invalid data received: Invalid JSON"
+        );
+    }
+
+    #[test]
+    fn test_balance_deserialization() {
+        let json = r#"{
+            "asset": "BTC",
+            "free": "1.5",
+            "locked": "0.5"
+        }"#;
+
+        let balance: Balance = serde_json::from_str(json).unwrap();
+        assert_eq!(balance.asset, "BTC");
+        assert_eq!(balance.free, "1.5");
+        assert_eq!(balance.locked, "0.5");
+    }
+
+    #[test]
+    fn test_market_data_with_symbol() {
+        let market_data = MarketData {
+            timestamp: Utc::now(),
+            open: 45000.0,
+            high: 46000.0,
+            low: 44000.0,
+            close: 45500.0,
+            volume: 1250.5,
+        };
+
+        let with_symbol = MarketDataWithSymbol {
+            symbol: "BTCUSDT".to_string(),
+            data: market_data,
+        };
+
+        assert_eq!(with_symbol.symbol, "BTCUSDT");
+        assert_eq!(with_symbol.data.open, 45000.0);
+    }
+}
