@@ -20,7 +20,7 @@ with DAG(
     "crypto_realtime_transform",
     default_args=default_args,
     description="Incremental real-time dbt transformations (staging + daily)",
-    schedule_interval="*/5 * * * *",  # All 5 minutes
+    schedule="*/5 * * * *",  # All 5 minutes
     catchup=False,
     is_paused_upon_creation=True,
     tags=["crypto", "realtime", "dbt"],
