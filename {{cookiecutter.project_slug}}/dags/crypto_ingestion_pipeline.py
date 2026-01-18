@@ -108,8 +108,7 @@ with DAG(
     "crypto_ingestion_pipeline",
     default_args=default_args,
     description="Pipeline crypto RAW → Staging → Analytics avec DBT",
-    schedule_interval=None,  # Manual
-    # schedule_interval=timedelta(minutes=5),
+    schedule=None,  # Manual
     catchup=False,
     # is_paused_upon_creation=False,
     is_paused_upon_creation=True,  # On pause

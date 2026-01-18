@@ -23,10 +23,13 @@ repos:
     rev: v0.8.4
     hooks:
       - id: ruff
-        args: [--fix, --exit-non-zero-on-fix]
-        files: ^{{cookiecutter\.project_slug}}/dags/.*\.py$
+        args: [--fix, --exit-non-zero-on-fix, --force-exclude]
+        files: '\.py$'
+        exclude: '\.git'
       - id: ruff-format
-        files: ^{{cookiecutter\.project_slug}}/dags/.*\.py$
+        args: [--force-exclude]
+        files: '\.py$'
+        exclude: '\.git'
 
   # Rust - Formatting
   - repo: https://github.com/doublify/pre-commit-rust
