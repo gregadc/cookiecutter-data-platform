@@ -80,20 +80,17 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: "pip"
+
+      - name: Install Poetry
+        run: pip install poetry
 
       - name: Install dependencies
-        run: |
-          pip install pytest pytest-cov apache-airflow apache-airflow-providers-docker redis psycopg2-binary
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        working-directory: '{{cookiecutter.project_slug}}'
+        run: poetry install
 
       - name: Run pytest
-        run: |
-          if [ -d "{{cookiecutter.project_slug}}/tests" ] || ls {{cookiecutter.project_slug}}/dags/test_*.py 2>/dev/null; then
-            pytest {{cookiecutter.project_slug}}/tests/ {{cookiecutter.project_slug}}/dags/ --cov={{cookiecutter.project_slug}}/dags --cov-report=xml --cov-report=term
-          else
-            echo "No tests found, skipping..."
-          fi
+        working-directory: '{{cookiecutter.project_slug}}'
+        run: poetry run pytest tests/ dags/ --cov=dags --cov-report=xml --cov-report=term
 
   test-rust:
     name: 🦀 Tests - ${{ matrix.name }}

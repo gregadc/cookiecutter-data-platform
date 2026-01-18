@@ -6,6 +6,7 @@ import redis
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.providers.docker.operators.docker import DockerOperator
+from docker.types import Mount
 from psycopg2.extras import execute_batch
 
 REDIS_HOST = os.getenv("REDIS_HOST", "data-platform-redis")
@@ -118,12 +119,13 @@ with DAG(
         task_id="dbt_run_raw",
         image="fishtownanalytics/dbt:1.0.0",
         api_version="auto",
-        auto_remove=True,
+        auto_remove="success",
         network_mode="cookiecutterproject_slug_data-platform",
         working_dir="/usr/app/dbt",
         environment={"DBT_PROFILES_DIR": "/usr/app/dbt"},
         command=["run", "--select", "raw_ohlc"],
-        mounts=[{"source": f"{PROJECT_ROOT}/dbt", "target": "/usr/app/dbt", "type": "bind"}],
+        # mounts=[{"source": f"{PROJECT_ROOT}/dbt", "target": "/usr/app/dbt", "type": "bind"}],
+        mounts=[Mount(source=f"{PROJECT_ROOT}/dbt", target="/usr/app/dbt", type="bind")],
         mount_tmp_dir=False,
     )
 
@@ -131,7 +133,7 @@ with DAG(
         task_id="run_rust_ingestion",
         image="crypto-ingestion:latest",
         api_version="auto",
-        auto_remove=True,
+        auto_remove="success",
         network_mode="cookiecutterproject_slug_data-platform",
         docker_url="unix://var/run/docker.sock",
         mount_tmp_dir=False,
@@ -148,7 +150,8 @@ with DAG(
             "STORAGE__URI": f"redis://{REDIS_HOST}:{REDIS_PORT}",
             "STORAGE__CHANNEL": "channel",
         },
-        mounts=[{"source": f"{PROJECT_ROOT}/data", "target": "/data", "type": "bind"}],
+        # mounts=[{"source": f"{PROJECT_ROOT}/data", "target": "/data", "type": "bind"}],
+        mounts=[Mount(source=f"{PROJECT_ROOT}/data", target="/data", type="bind")],
     )
 
     load_to_postgres = PythonOperator(
@@ -160,12 +163,13 @@ with DAG(
         task_id="dbt_run_staging_analytics",
         image="fishtownanalytics/dbt:1.0.0",
         api_version="auto",
-        auto_remove=True,
+        auto_remove="success",
         working_dir="/usr/app/dbt",
         environment={"DBT_PROFILES_DIR": "/usr/app/dbt"},
         network_mode="cookiecutterproject_slug_data-platform",
         command=["run", "--exclude", "raw_ohlc"],
-        mounts=[{"source": f"{PROJECT_ROOT}/dbt", "target": "/usr/app/dbt", "type": "bind"}],
+        # mounts=[{"source": f"{PROJECT_ROOT}/dbt", "target": "/usr/app/dbt", "type": "bind"}],
+        mounts=[Mount(source=f"{PROJECT_ROOT}/dbt", target="/usr/app/dbt", type="bind")],
         mount_tmp_dir=False,
     )
 

@@ -73,6 +73,42 @@ pip install pre-commit
 pre-commit install
 ```
 
+### Python (Airflow DAGs)
+```bash
+# Check and auto-fix Python code
+cd {{cookiecutter.project_slug}}
+ruff check --fix dags/
+
+# Format Python code
+ruff format dags/
+```
+
+### Rust (API & Ingestion)
+```bash
+# Format Rust code
+cd {{cookiecutter.project_slug}}/api
+cargo fmt
+
+cd {{cookiecutter.project_slug}}/ingestion/rust-ingestion
+cargo fmt
+
+# Lint Rust code
+cd {{cookiecutter.project_slug}}/api
+cargo clippy --all-targets --all-features
+
+cd {{cookiecutter.project_slug}}/ingestion/rust-ingestion
+cargo clippy --all-targets --all-features
+```
+
+### All at once (via pre-commit)
+```bash
+# Run all checks on staged files
+pre-commit run
+
+# Run all checks on all files
+pre-commit run --all-files
+```
+
 ### What it does
 
 - ✅ Formats Python code (ruff)
@@ -159,7 +195,7 @@ See [COMMANDS.md](./COMMANDS.md) for detailed troubleshooting commands.
 - [x] CI/CD (GitHub Actions)
 - [x] Unit & Integration tests
 - [ ] Superset dashboards
-- [ ] Cloud deployment (Terraform)
+- [ ] Cloud deployment (Kube, Terraform)
 - [ ] RAG for chat-based analytics
 
 ## 🤝 Contributing

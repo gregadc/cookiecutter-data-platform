@@ -16,6 +16,7 @@ exclude = [
     ".mypy_cache",
     "build",
     "dist",
+	"ingestion/rust-ingestion/target",
 ]
 
 [tool.ruff.lint]
@@ -72,3 +73,29 @@ markers = [
     "slow: marks tests as slow",
     "integration: marks tests as integration tests",
 ]
+
+[tool.poetry]
+name = "cookiecutter-project-slug"
+version = "0.1.0"
+description = "Cryptocurrency data platform with Airflow, dbt, Kafka, and Rust"
+authors = ["Greg"]
+packages = []
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.14"
+apache-airflow = "^3.1.6"
+apache-airflow-providers-docker = "^4.5.2"
+redis = "^7.1.0"
+psycopg2-binary = "^2.9.11"
+docker = "^7.1.0"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^9.0.2"
+pytest-cov = "^7.0.0"
+pytest-mock = "^3.15.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
