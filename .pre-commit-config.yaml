@@ -1,7 +1,6 @@
 # Pre-commit hooks configuration
 # Run: pre-commit install
 # Update: pre-commit autoupdate
-
 repos:
   # Generic file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -17,20 +16,21 @@ repos:
         args: [--maxkb=1000]
       - id: check-merge-conflict
       - id: mixed-line-ending
-
   # Python - Ruff (linting + formatting)
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.4
+  - repo: local
     hooks:
-      - id: ruff
-        args: [--fix, --exit-non-zero-on-fix, --force-exclude]
-        files: '\.py$'
-        exclude: '\.git'
-      - id: ruff-format
-        args: [--force-exclude]
-        files: '\.py$'
-        exclude: '\.git'
-
+      - id: ruff-check-dags
+        name: ruff check (dags)
+        entry: ruff check --fix --exit-non-zero-on-fix
+        language: system
+        files: '^(\{\{cookiecutter\.project_slug\}\}/dags/.*\.py)$'
+        pass_filenames: true
+      - id: ruff-format-dags
+        name: ruff format (dags)
+        entry: ruff format
+        language: system
+        files: '^(\{\{cookiecutter\.project_slug\}\}/dags/.*\.py)$'
+        pass_filenames: true
   # Rust - Formatting
   - repo: https://github.com/doublify/pre-commit-rust
     rev: v1.0

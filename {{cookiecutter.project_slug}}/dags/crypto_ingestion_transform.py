@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.providers.docker.operators.docker import DockerOperator
+from docker.types import Mount
 
 PROJECT_ROOT = os.getenv("PROJECT_ROOT", "/opt/airflow")
 
@@ -29,12 +30,13 @@ with DAG(
         task_id="dbt_run_incremental",
         image="fishtownanalytics/dbt:1.0.0",
         api_version="auto",
-        auto_remove=True,
+        auto_remove="success",
         working_dir="/usr/app/dbt",
         environment={"DBT_PROFILES_DIR": "/usr/app/dbt"},
         network_mode="cookiecutterproject_slug_data-platform",
         command=["run", "--select", "stg_ohlc", "daily_ohlc"],
         # command=["run", "--exclude", "raw_ohlc"], # Launch everything except raw_ohlc
-        mounts=[{"source": f"{PROJECT_ROOT}/dbt", "target": "/usr/app/dbt", "type": "bind"}],
+        # mounts=[{"source": f"{PROJECT_ROOT}/dbt", "target": "/usr/app/dbt", "type": "bind"}],
+        mounts=[Mount(source=f"{PROJECT_ROOT}/dbt", target="/usr/app/dbt", type="bind")],
         mount_tmp_dir=False,
     )
