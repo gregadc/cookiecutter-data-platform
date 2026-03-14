@@ -31,12 +31,19 @@ A data platform model for data ingestion, transformation and visualization, in t
 ### Installation
 
 ```bash
+# 1. Generate the project with cookiecutter
+pip install cookiecutter
+cookiecutter .
+cd <your_project_name>
+OR just
+cd {{cookiecutter.project_slug}}/
+
 # 1. Install pre-commit hooks (recommended)
 pip install pre-commit
 pre-commit install
 
 # 2. Start services (BATCH mode by default)
-docker compose -f {{cookiecutter.project_slug}}/docker-compose-dev.yml up -d
+docker compose -f docker-compose-dev.yml up -d
 
 # 3. Access Airflow UI
 # URL: http://localhost:8081
@@ -52,14 +59,14 @@ docker compose -f {{cookiecutter.project_slug}}/docker-compose-dev.yml up -d
 Ingests data from CSV files
 
 ```bash
-docker compose -f {{cookiecutter.project_slug}}/docker-compose-dev.yml up -d
+docker compose -f docker-compose-dev.yml up -d
 ```
 
 ### REALTIME Mode
 Streams live data from Binance WebSocket via Kafka
 
 ```bash
-docker compose -f {{cookiecutter.project_slug}}/docker-compose-dev.yml --profile realtime up -d
+docker compose -f docker-compose-dev.yml --profile realtime up -d
 ```
 
 ## 🔒 Pre-commit Hooks
@@ -86,17 +93,17 @@ ruff format dags/
 ### Rust (API & Ingestion)
 ```bash
 # Format Rust code
-cd {{cookiecutter.project_slug}}/api
+cd api
 cargo fmt
 
-cd {{cookiecutter.project_slug}}/ingestion/rust-ingestion
+cd ingestion/rust-ingestion
 cargo fmt
 
 # Lint Rust code
-cd {{cookiecutter.project_slug}}/api
+cd api
 cargo clippy --all-targets --all-features
 
-cd {{cookiecutter.project_slug}}/ingestion/rust-ingestion
+cd ingestion/rust-ingestion
 cargo clippy --all-targets --all-features
 ```
 
@@ -159,10 +166,10 @@ exit
 
 ```bash
 # Stop services
-docker compose -f {{cookiecutter.project_slug}}/docker-compose-dev.yml down
+docker compose -f docker-compose-dev.yml down
 
 # Stop and remove volumes (full reset)
-docker compose -f {{cookiecutter.project_slug}}/docker-compose-dev.yml down -v
+docker compose -f docker-compose-dev.yml down -v
 ```
 
 ## 📚 Documentation
