@@ -3,7 +3,8 @@
     unique_key=['symbol', 'timestamp'],
     on_schema_change='ignore',
     post_hook=[
-        "CREATE INDEX IF NOT EXISTS idx_raw_ohlc_symbol_timestamp ON {{ this }} (symbol, timestamp DESC)"
+        "CREATE INDEX IF NOT EXISTS idx_raw_ohlc_symbol_timestamp ON {{ this }} (symbol, timestamp DESC)",
+        "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'raw_ohlc_symbol_timestamp_unique') THEN ALTER TABLE {{ this }} ADD CONSTRAINT raw_ohlc_symbol_timestamp_unique UNIQUE (symbol, timestamp); END IF; END $$"
     ]
 ) }}
 

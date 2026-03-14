@@ -2,16 +2,17 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:15
+    image: ankane/pgvector
     container_name: data-platform-postgres
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: admin
     ports:
-      - "5434:5432" 
+      - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
     networks:
       - data-platform
     healthcheck:
@@ -101,7 +102,7 @@ services:
       AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
       # AIRFLOW__API__ENABLE_CORS: 'True'
       # AIRFLOW__API__ACCESS_CONTROL_ALLOW_ORIGINS: '*'
-      PROJECT_ROOT: /Users/gregamorim/Documents/baby-bot/cookiecutter-data-platform/{{cookiecutter.project_slug}}
+      PROJECT_ROOT: ${PWD}
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
@@ -109,6 +110,7 @@ services:
       - ./ingestion:/opt/airflow/ingestion
       - /var/run/docker.sock:/var/run/docker.sock
       - ./data:/opt/airflow/data
+      - ./dbt:/opt/airflow/dbt
     ports:
       - "8081:8080"
     depends_on:
@@ -140,7 +142,7 @@ services:
       AIRFLOW__METRICS__STATSD_EXPORTER: 'prometheus'
       AIRFLOW__METRICS__STATSD_ALLOW_LIST: '*'
       AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
-      PROJECT_ROOT: /Users/gregamorim/Documents/baby-bot/cookiecutter-data-platform/{{cookiecutter.project_slug}}
+      PROJECT_ROOT: ${PWD}
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
@@ -148,6 +150,7 @@ services:
       - ./ingestion:/opt/airflow/ingestion
       - /var/run/docker.sock:/var/run/docker.sock
       - ./data:/opt/airflow/data
+      - ./dbt:/opt/airflow/dbt
     depends_on:
       postgres-airflow:
         condition: service_healthy
@@ -157,7 +160,7 @@ services:
       - data-platform
     command: scheduler
     restart: on-failure
-  
+
   crypto-producer:
     profiles: ["realtime"]
     # H24 producer
@@ -208,7 +211,7 @@ services:
     networks:
       - data-platform
     restart: on-failure
-  
+
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -275,7 +278,7 @@ services:
     networks:
       - data-platform
     restart: unless-stopped
-  
+
   dbt:
     image: fishtownanalytics/dbt:1.0.0
     container_name: dbt
@@ -293,7 +296,7 @@ services:
     restart: on-failure
 
   superset:
-    build: 
+    build:
       context: ./superset
       dockerfile: Dockerfile
     container_name: superset
@@ -307,7 +310,7 @@ services:
     networks:
       - data-platform
     restart: unless-stopped
-  
+
   api:
     build: ./api
     container_name: crypto-api
@@ -322,7 +325,7 @@ services:
     networks:
       - data-platform
     restart: unless-stopped
-  
+
   zookeeper:
     profiles: ["realtime"]
     image: confluentinc/cp-zookeeper:7.5.0
@@ -342,7 +345,7 @@ services:
       timeout: 10s
       retries: 10
       start_period: 30s
-  
+
   kafka:
     profiles: ["realtime"]
     image: confluentinc/cp-kafka:7.5.0
@@ -369,7 +372,7 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
-  
+
   kafka-init:
     profiles: ["realtime"]
     image: confluentinc/cp-kafka:7.5.0
@@ -383,16 +386,16 @@ services:
       bash -c "
       echo 'Waiting for Kafka to be ready...'
       cub kafka-ready -b kafka:9093 1 30
-      
-      kafka-topics --create --if-not-exists 
-      --topic crypto-prices 
-      --bootstrap-server kafka:9093 
-      --partitions 1 
+
+      kafka-topics --create --if-not-exists
+      --topic crypto-prices
+      --bootstrap-server kafka:9093
+      --partitions 1
       --replication-factor 1
-      
+
       echo 'Topic crypto-prices created!'
       "
-  
+
   kafka-connect:
     profiles: ["realtime"]
     image: confluentinc/cp-kafka-connect:7.5.0
@@ -438,7 +441,7 @@ services:
       - |
         confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:latest
         /etc/confluent/docker/run
-  
+
   dbt-realtime:
     profiles: ["realtime"]
     image: fishtownanalytics/dbt:1.0.0
